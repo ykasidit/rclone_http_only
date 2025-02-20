@@ -1,0 +1,1 @@
+docker run --rm -v $(pwd):/build ykasidit/android_ndk_c_rust_go_builder_ext:34-ndk bash -c 'cd /build && CC=$ANDROID_TOOLCHAIN CXX=$ANDROID_TOOLCHAIN CGO_ENABLED=1 CGO_CFLAGS=-fcommon GOOS=android GOARCH=arm64 go build -ldflags="-s -w"' && file rclone
