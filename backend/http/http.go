@@ -12,6 +12,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 	"sync"
@@ -126,6 +127,7 @@ type Object struct {
 	size        int64
 	modTime     time.Time
 	contentType string
+	md5         string
 }
 
 // statusError returns an error if the res contained an error
@@ -429,6 +431,13 @@ func addHeaders(req *http.Request, opt *Options) {
 		value := opt.Headers[i+1]
 		req.Header.Add(key, value)
 	}
+	//add env headers
+	env := os.Getenv("RCLONE_CONFIG_HTTP_HEADER")
+	if env != "" {
+		kv := strings.SplitN(env, ":", 2)
+		req.Header.Add(kv[0], kv[1])
+	}
+
 }
 
 // Adds the configured headers to the request if any
@@ -575,7 +584,10 @@ func (o *Object) Remote() string {
 
 // Hash returns "" since HTTP (in Go or OpenSSH) doesn't support remote calculation of hashes
 func (o *Object) Hash(ctx context.Context, r hash.Type) (string, error) {
-	return "", hash.ErrUnsupported
+	if o.md5 == "" {
+		return "", fmt.Errorf("no etag header in http resp for object")
+	}
+	return o.md5, nil
 }
 
 // Size returns the size in bytes of the remote http file
@@ -627,6 +639,7 @@ func (o *Object) decodeMetadata(ctx context.Context, res *http.Response) error {
 	o.modTime = t
 	o.contentType = res.Header.Get("Content-Type")
 	o.size = rest.ParseSizeFromHeaders(res.Header)
+	o.md5 = rest.ParseEtagFromHeaders(res.Header)
 
 	// If NoSlash is set then check ContentType to see if it is a directory
 	if o.fs.opt.NoSlash {
@@ -681,7 +694,7 @@ func (o *Object) Open(ctx context.Context, options ...fs.OpenOption) (in io.Read
 
 // Hashes returns hash.HashNone to indicate remote hashing is unavailable
 func (f *Fs) Hashes() hash.Set {
-	return hash.Set(hash.None)
+	return hash.Set(hash.MD5)
 }
 
 // Mkdir makes the root directory of the Fs object

@@ -37,3 +37,8 @@ func ParseSizeFromHeaders(headers http.Header) (size int64) {
 	}
 	return ret
 }
+
+func ParseEtagFromHeaders(headers http.Header) string {
+	var etag = headers.Get("etag")
+	return strings.ReplaceAll(etag, "\"", "")
+}
