@@ -1,3 +1,26 @@
+rclone_http_only
+================
+
+rclone fork with http only
+
+features
+--------
+
+- etag md5 check support in http headers so sync --checksum would work and not fallback to filesize checks only
+- use env 'RCLONE_CONFIG_HTTP_HEADER' to set your http header via env instead of cmd arg
+
+building
+--------
+
+- Ubuntu GNU/Linux executable:
+`./build_gh.sh`
+
+- Android ndk v34 executable:
+`./build_android.sh`
+
+
+---
+
 <div align="center">
 <sup>Special thanks to our sponsor:</sup>
 <br>
